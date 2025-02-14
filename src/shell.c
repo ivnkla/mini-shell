@@ -50,6 +50,16 @@ int main()
 				printf("%s ", cmd[j]);
 			}
 			printf("\n");
+
+		/*gestion d'une commande simple*/
+        /*factoriser plus tard dans une fonction a part entière*/
+			pid_t pid = fork();
+			if (pid==0) { //execute from the child
+				printf("hello from the child\n");
+				execvp(cmd[0], &cmd[1]);
+				exit(0);
+			}		
+			waitpid(pid, NULL, 0);
 		}
 	}
 }
