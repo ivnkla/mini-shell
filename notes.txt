@@ -1,0 +1,4 @@
+#Fichier contenant des notes évitant de feuilleter le sujet
+
+#lancer un test
+./sdriver.pl -t test01.txt -s ./shell
