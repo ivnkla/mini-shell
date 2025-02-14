@@ -29,6 +29,16 @@ int main()
 			continue;
 		}
 
+		/*Here we checking if the line isn't empty*/
+		if (l->seq[0] == NULL){
+			continue;
+		}
+		
+		/* If the first command is 'quit' then we exit the shell program */
+		if (strcmp(l->seq[0][0],"quit")==0){
+			exit(0);
+		}
+		
 		if (l->in) printf("in: %s\n", l->in);
 		if (l->out) printf("out: %s\n", l->out);
 
