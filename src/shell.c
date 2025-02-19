@@ -12,7 +12,7 @@ int main()
 {
 	while (1) {
 		struct cmdline *l;
-		int i, j;
+		int i, j, k;
 
 		printf("shell> ");
 		l = readcmd();
@@ -47,19 +47,30 @@ int main()
 			char **cmd = l->seq[i];
 			printf("seq[%d]: ", i);
 			for (j=0; cmd[j]!=0; j++) {
-				printf("%s ", cmd[j]);
+				/*printf("command of the pipe: \n");*/
+				printf("cmd[%d]: %s ", j, cmd[j]);
+				/*printf("command of the sequence: \n");
+				for (k=0; cmd[j][k]!=0; k++) {
+					printf("%s ", cmd[j][k]);
+				}*/
 			}
 			printf("\n");
 
-		/*gestion d'une commande simple*/
-        /*factoriser plus tard dans une fonction a part entière*/
+			/*gestion d'une commande simple*/
+        	/*factoriser plus tard dans une fonction a part entière*/
 			pid_t pid = fork();
 			if (pid==0) { //execute from the child
 				printf("hello from the child\n");
-				execvp(cmd[0], &cmd[0]);
-				exit(0);
-			}		
+				printf("---------------------------------------------------------------------------------------------------------------------------\n");
+				if (execvp(cmd[0], &cmd[0])==-1){
+					perror("execvp failed\n");
+					exit(0);
+				}
+			}
 			waitpid(pid, NULL, 0);
+			printf("---------------------------------------------------------------------------------------------------------------------------\n");
+			
+			/*fin de la commande simple*/
 		}
 	}
 }
