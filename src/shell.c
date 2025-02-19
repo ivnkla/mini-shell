@@ -56,7 +56,7 @@ int main()
 			pid_t pid = fork();
 			if (pid==0) { //execute from the child
 				printf("hello from the child\n");
-				execvp(cmd[0], &cmd[1]);
+				execvp(cmd[0], &cmd[0]);
 				exit(0);
 			}		
 			waitpid(pid, NULL, 0);
