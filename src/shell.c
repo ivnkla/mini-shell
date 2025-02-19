@@ -7,6 +7,29 @@
 #include "readcmd.h"
 #include "csapp.h"
 
+/*returns the position of the redirection, -1 if no*/
+int contains_redir(char ** cmd) {
+	for (int i=0; cmd[i] != NULL; i++) {
+		if (strcmp(cmd[i],">")!=-1) return i;
+	}
+	return -1;
+}
+
+/*part3, simple command*/
+void cmd_3(char **cmd) {
+	/*factoriser plus tard dans une fonction a part entière*/
+	pid_t pid = fork();
+	if (pid==0) { //execute from the child
+		printf("hello from the child\n");
+		printf("---------------------------------------------------------------------------------------------------------------------------\n");
+		if (execvp(cmd[0], &cmd[0])==-1){
+			perror("execvp failed\n");
+			exit(0);
+		}
+	}
+	waitpid(pid, NULL, 0);
+	printf("---------------------------------------------------------------------------------------------------------------------------\n");
+}
 
 int main()
 {
@@ -55,22 +78,13 @@ int main()
 				}*/
 			}
 			printf("\n");
+			if (contains_redir(cmd)!=-1) {
+				
 
-			/*gestion d'une commande simple*/
-        	/*factoriser plus tard dans une fonction a part entière*/
-			pid_t pid = fork();
-			if (pid==0) { //execute from the child
-				printf("hello from the child\n");
-				printf("---------------------------------------------------------------------------------------------------------------------------\n");
-				if (execvp(cmd[0], &cmd[0])==-1){
-					perror("execvp failed\n");
-					exit(0);
 				}
+			else {
+				cmd_3(cmd);
 			}
-			waitpid(pid, NULL, 0);
-			printf("---------------------------------------------------------------------------------------------------------------------------\n");
-			
-			/*fin de la commande simple*/
 		}
 	}
 }
