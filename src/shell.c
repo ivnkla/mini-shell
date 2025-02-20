@@ -15,27 +15,80 @@ int contains_redir(char ** cmd) {
 	return -1;
 }
 
-/*part3, simple command*/
-void cmd_3(char **cmd) {
+/*part3 et 4, simple command*/
+void cmd_simple(struct cmdline* l,char **cmd) {
 	/*factoriser plus tard dans une fonction a part entière*/
 	pid_t pid = fork();
+	int fd, fd1 = 0;
 	if (pid==0) { //execute from the child
-		printf("hello from the child\n");
-		printf("---------------------------------------------------------------------------------------------------------------------------\n");
+		if (l->out){ 		// test if there is a redirection out
+			fd = Open(l->out, O_CREAT | O_WRONLY | O_TRUNC , 0644);
+			printf("hello there is a redirection out here\n");
+			printf("---------------------------------------------------------------------------------------------------------------------------\n");
+			Dup2(fd,1);		//on redirige la sortie standard vers le fichier
+
+			
+		} 
+		if (l->in){		// test if there is a redirection out
+				fd1 = Open(l->in, O_RDONLY , 0644);
+				printf("hello there is a redirection in here\n");
+				printf("---------------------------------------------------------------------------------------------------------------------------\n");
+				Dup2(fd1,0);	//on redirige le fichier vers l'entrée standard
+		}
+
 		if (execvp(cmd[0], &cmd[0])==-1){
 			perror("execvp failed\n");
+			close(fd);
+			close(fd1);
 			exit(0);
 		}
+
+		else {
+			printf("hello from the child\n");
+			printf("---------------------------------------------------------------------------------------------------------------------------\n");
+			if (execvp(cmd[0], &cmd[0])==-1){
+				perror("execvp failed\n");
+				exit(0);
+			}
+
+		}	
 	}
 	waitpid(pid, NULL, 0);
 	printf("---------------------------------------------------------------------------------------------------------------------------\n");
 }
 
+void redirection(char **cmd){
+	//int i = contains_redir(cmd) + 1;
+	//char * str = cmd[i];
+	int fd = Open("toto.txt", O_CREAT | O_WRONLY , 0);
+	Dup2(fd,1);
+	close(fd);
+}
+
+/*void redir(char **cmd){
+	int i = 0;
+	pid_t pid = fork();
+	switch(pid){
+		case -1 :
+			fprintf(stderr, "Erreur");
+			exit(1);
+		
+		case 0 :
+			i = contains_redir(cmd);
+			break;
+
+		default :
+			printf("Pas encore fait");
+			break;
+
+	}
+}*/
+
 int main()
 {
 	while (1) {
 		struct cmdline *l;
-		int i, j, k;
+		int i, j;//, k;
 
 		printf("shell> ");
 		l = readcmd();
@@ -78,13 +131,7 @@ int main()
 				}*/
 			}
 			printf("\n");
-			if (contains_redir(cmd)!=-1) {
-				
-
-				}
-			else {
-				cmd_3(cmd);
-			}
+			cmd_simple(l,cmd);
 		}
 	}
 }
