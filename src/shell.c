@@ -57,32 +57,7 @@ void cmd_simple(struct cmdline* l,char **cmd) {
 	printf("---------------------------------------------------------------------------------------------------------------------------\n");
 }
 
-void redirection(char **cmd){
-	//int i = contains_redir(cmd) + 1;
-	//char * str = cmd[i];
-	int fd = Open("toto.txt", O_CREAT | O_WRONLY , 0);
-	Dup2(fd,1);
-	close(fd);
-}
 
-/*void redir(char **cmd){
-	int i = 0;
-	pid_t pid = fork();
-	switch(pid){
-		case -1 :
-			fprintf(stderr, "Erreur");
-			exit(1);
-		
-		case 0 :
-			i = contains_redir(cmd);
-			break;
-
-		default :
-			printf("Pas encore fait");
-			break;
-
-	}
-}*/
 
 int main()
 {
