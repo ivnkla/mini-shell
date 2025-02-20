@@ -15,20 +15,29 @@ void cmd_simple(struct cmdline* l,char **cmd) {
 		if (l->out){ 		// test if there is a redirection out
 			out = Open(l->out, O_CREAT | O_WRONLY | O_TRUNC , 0644);
 			fprintf(stderr, "Debug - hello there is a redirection out here\n");
-			Dup2(out,1);	//on redirige la sortie standard vers le fichier	
+			Dup2(out,1);	//on redirige la sortie standard vers le fichier
+			Close(out);
 		} 
 		if (l->in){		// test if there is a redirection out
 			in = Open(l->in, O_RDONLY, 0444);
 			fprintf(stderr, "Debug - hello there is a redirection in here\n");
 			Dup2(in,0);		//on redirige le fichier vers l'entrée standard
+			Close(in);
 		}
 		if (execvp(cmd[0], &cmd[0])==-1){
-			perror("execvp failed\n");
-			Close(in);
-			Close(out);
-			exit(0);
+			switch(errno) { //error managing
+				case ENOENT: //errno: No such file or directory
+					fprintf(stderr, "shell: command not found\n");
+					break;
+				case EINVAL:
+					fprintf(stderr, "shell: invalid arguments\n");
+					break;
+				default:
+					perror("shell ");
+					break;
+			}
+		exit(0);
 		}
-
 	}
 	else { //father
 		waitpid(pid, NULL, 0);
