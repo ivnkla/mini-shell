@@ -44,9 +44,10 @@ void cmd_simple(struct cmdline* l,char **cmd) {
 }
 
 /* part 6*/
-void pipe_cmd_simple(char **cmd1, char **cmd2) {
+void pipe_cmd_simple(struct cmdline* l, char **cmd1, char **cmd2) {	
 	int fd[2]; //fd[0] = read, fd[1] = write
 	pid_t pid1, pid2;
+	//int in, out;
 	if (pipe(fd) == -1) {
 		perror("Pipe error ");
 		exit(EXIT_FAILURE);
@@ -57,28 +58,47 @@ void pipe_cmd_simple(char **cmd1, char **cmd2) {
 	}
 
 	//first command
-	if (pid1 == 0) {
-		Close(fd[0]); //close the pipe read
-		Dup2(fd[1], STDOUT_FILENO); //make stdout points to fd
-		Close(fd[1]);
-		execvp(cmd1[0], &cmd1[0]);
-		perror("execvp ");
-		exit(EXIT_FAILURE);
+	if (pid1 == 0) { // Enfant pour cmd1
+        // Si pas de redirection de sortie, rediriger stdout vers le pipe
+        if (!(l->out)) {
+            Close(fd[0]); // Fermer le côté lecture du pipe
+            Dup2(fd[1], STDOUT_FILENO); // Rediriger stdout vers le pipe
+            Close(fd[1]); // Fermer le côté écriture du pipe après Dup2
+        } else {
+            // Si redirection de sortie, utiliser cmd_simple pour gérer cela
+            Close(fd[0]); // Fermer le côté lecture du pipe
+            cmd_simple(l, cmd1); // Exécuter cmd1 avec les redirections gérées par cmd_simple
+            Close(fd[1]); // Fermer le côté écriture du pipe (si cmd_simple ne l'a pas déjà fait)
+        }
+        // Exécuter cmd1 après redirection
+        execvp(cmd1[0], cmd1);
+        perror("execvp ");
+        exit(EXIT_FAILURE);
+    }
 
-	}
-	if ((pid2 = Fork())==-1) {
-		perror("Fork error ");
-		exit(EXIT_FAILURE);
-	}	
-	//second command
-	if (pid2 == 0) {
-		Close(fd[1]); //close the pipe write
-		Dup2(fd[0], STDIN_FILENO); //makes stdin points to fd
-		Close(fd[0]);
-		execvp(cmd2[0], &cmd2[0]);
-		perror("execvp ");
-		exit(EXIT_FAILURE);
-	}
+    // Deuxième processus (cmd2)
+    if ((pid2 = Fork()) == -1) {
+        perror("Fork error ");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid2 == 0) { // Enfant pour cmd2
+        // Si pas de redirection d'entrée, rediriger stdin depuis le pipe
+        if (!(l->in)) {
+            Close(fd[1]); // Fermer le côté écriture du pipe
+            Dup2(fd[0], STDIN_FILENO); // Rediriger stdin depuis le pipe
+            Close(fd[0]); // Fermer le côté lecture du pipe après Dup2
+        } else {
+            // Si redirection d'entrée, utiliser cmd_simple pour gérer cela
+            Close(fd[1]); // Fermer le côté écriture du pipe
+            cmd_simple(l, cmd2); // Exécuter cmd2 avec les redirections gérées par cmd_simple
+            Close(fd[0]); // Fermer le côté lecture du pipe (si cmd_simple ne l'a pas déjà fait)
+        }
+        // Exécuter cmd2 après redirection
+        execvp(cmd2[0], cmd2);
+        perror("execvp ");
+        exit(EXIT_FAILURE);
+    }
 	//father
 	Close(fd[0]);
 	Close(fd[1]);
@@ -128,7 +148,7 @@ int main()
 			char **cmd1 = l->seq[i];
 			if (l->seq[i+1]!=0) {
 				char **cmd2 = l->seq[i+1];
-				pipe_cmd_simple(cmd1, cmd2);
+				pipe_cmd_simple(l,cmd1, cmd2);
 			} else {
 				cmd_simple(l, cmd1);
 			}
