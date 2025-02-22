@@ -35,7 +35,7 @@ void cmd_simple(struct cmdline* l,char **cmd) {
 					perror("shell ");
 					break;
 			}
-		exit(0);
+			exit(0);
 		}
 	}
 	else { //father
@@ -92,7 +92,7 @@ int main()
 
 	while (1) {
 		struct cmdline *l;
-		int i, j;//, k;
+		int i;// j;//, k;
 
 		printf("shell> ");
 		l = readcmd();
