@@ -2,111 +2,137 @@
  * Copyright (C) 2002, Simon Nieuviarts
  */
 
+ /* You'll find a detailed explanation of the functions in the repo https://github.com/ivnkla/mini-shell in the EREADME file*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "readcmd.h"
 #include "csapp.h"
+
+//adding a debug option, pas sûr de l'utilité...
+#ifdef DEBUG
+    #define DEBUG_PRINT(fmt, args...) fprintf(stderr, "[DEBUG] " fmt "\n", ##args)
+#else
+    #define DEBUG_PRINT(fmt, args...)
+#endif
+
+
 /*part3 et 4, simple command and redirections*/
 void cmd_simple(struct cmdline* l,char **cmd) {
-	pid_t pid = Fork();
-	int in, out = 0;
-	if (pid==0) { //execute from the child
-		if (l->out){ 		// test if there is a redirection out
-			out = Open(l->out, O_CREAT | O_WRONLY | O_TRUNC , 0644);
-			fprintf(stderr, "Debug - hello there is a redirection out here\n");
-			Dup2(out,1);	//on redirige la sortie standard vers le fichier
+	pid_t pid;
+	int in, out = -1;
+	if ((pid=Fork())==0) {
+		//test if there is a redirection OUT
+		if (l->out){
+			if ((out = Open(l->out, O_CREAT | O_WRONLY | O_TRUNC , 0644))==-1) {
+				perror("Open 'out' error ");
+				exit(EXIT_FAILURE);
+			}
+			DEBUG_PRINT("Debug - hello there is a redirection OUT here");
+			Dup2(out,1);//on fait pointer la sortie standard vers le fichier OUT
 			Close(out);
 		} 
-		if (l->in){		// test if there is a redirection out
-			in = Open(l->in, O_RDONLY, 0444);
-			fprintf(stderr, "Debug - hello there is a redirection in here\n");
-			Dup2(in,0);		//on redirige le fichier vers l'entrée standard
+		// test if there is a redirection IN
+		if (l->in){		
+			if ((in = Open(l->in, O_RDONLY, 0444))==-1) {
+				perror("Open 'in' error ");
+				exit(EXIT_FAILURE);
+			}
+			DEBUG_PRINT("Debug - hello there is a redirection IN here");
+			Dup2(in,0);	//on fait pointer l'entree standard vers le fichier IN
 			Close(in);
 		}
-		if (execvp(cmd[0], &cmd[0])==-1){
-			switch(errno) { //error managing
-				case ENOENT: //errno: No such file or directory
-					fprintf(stderr, "shell: command not found\n");
-					break;
-				case EINVAL:
-					fprintf(stderr, "shell: invalid arguments\n");
-					break;
-				default:
-					perror("shell ");
-					break;
-			}
-			exit(0);
+		execvp(cmd[0], &cmd[0]);
+		//goes here iff execvp failed
+		switch(errno) {
+			case ENOENT: //errno: No such file or directory
+				fprintf(stderr, "shell: command not found\n");
+				break;
+			case EINVAL:
+				fprintf(stderr, "shell: invalid arguments\n");
+				break;
+			default:
+				perror("shell ");
+				break;
 		}
+		exit(EXIT_FAILURE);
 	}
 	else { //father
 		waitpid(pid, NULL, 0);
 	}
 }
 
-/* part 6*/
-void pipe_cmd_simple(struct cmdline* l, char **cmd1, char **cmd2) {	
-	int fd[2]; //fd[0] = read, fd[1] = write
-	pid_t pid1, pid2;
-	//int in, out;
-	if (pipe(fd) == -1) {
-		perror("Pipe error ");
-		exit(EXIT_FAILURE);
-	}
-	if ((pid1 = Fork())==-1) {
-		perror("Fork error ");
-		exit(EXIT_FAILURE);
-	}
-
-	//first command
-	if (pid1 == 0) { // Enfant pour cmd1
-        // Si pas de redirection de sortie, rediriger stdout vers le pipe
-        if (!(l->out)) {
-            Close(fd[0]); // Fermer le côté lecture du pipe
-            Dup2(fd[1], STDOUT_FILENO); // Rediriger stdout vers le pipe
-            Close(fd[1]); // Fermer le côté écriture du pipe après Dup2
-        } else {
-            // Si redirection de sortie, utiliser cmd_simple pour gérer cela
-            Close(fd[0]); // Fermer le côté lecture du pipe
-            cmd_simple(l, cmd1); // Exécuter cmd1 avec les redirections gérées par cmd_simple
-            Close(fd[1]); // Fermer le côté écriture du pipe (si cmd_simple ne l'a pas déjà fait)
-        }
-        // Exécuter cmd1 après redirection
-        execvp(cmd1[0], cmd1);
-        perror("execvp ");
+/* part 6 one pipe with (or without) redirection */
+void pipe_cmd_simple(struct cmdline* l, char **cmd1, char **cmd2) {
+    int fd[2];
+    pid_t pid1, pid2;
+    int in_fd, out_fd = -1;
+    
+    if (pipe(fd) == -1) {
+        perror("Pipe error ");
         exit(EXIT_FAILURE);
     }
-
-    // Deuxième processus (cmd2)
+    
+    if ((pid1 = Fork()) == -1) {
+        perror("Fork error ");
+        exit(EXIT_FAILURE);
+    }
+ 
+ 	//handling cmd1 with first child
+    if (pid1 == 0) {
+        //if input redirection, make point stdin to that input file 
+        if (l->in) {
+            in_fd = Open(l->in, O_RDONLY, 0444);
+            if (in_fd == -1) {
+                perror("Open input file error");
+                exit(EXIT_FAILURE);
+            }
+            Dup2(in_fd, STDIN_FILENO);
+            Close(in_fd);
+        }
+        
+        //and then, in any case, write the result into the pipe
+        Dup2(fd[1], STDOUT_FILENO);//making point stdout into the pipe
+        Close(fd[0]);
+        Close(fd[1]);
+        execvp(cmd1[0], cmd1);
+        perror("execvp error cmd1");
+        exit(EXIT_FAILURE);
+    }
+	
+	//by the same way, handling cm2 with second child
     if ((pid2 = Fork()) == -1) {
         perror("Fork error ");
         exit(EXIT_FAILURE);
     }
 
-    if (pid2 == 0) { // Enfant pour cmd2
-        // Si pas de redirection d'entrée, rediriger stdin depuis le pipe
-        if (!(l->in)) {
-            Close(fd[1]); // Fermer le côté écriture du pipe
-            Dup2(fd[0], STDIN_FILENO); // Rediriger stdin depuis le pipe
-            Close(fd[0]); // Fermer le côté lecture du pipe après Dup2
-        } else {
-            // Si redirection d'entrée, utiliser cmd_simple pour gérer cela
-            Close(fd[1]); // Fermer le côté écriture du pipe
-            cmd_simple(l, cmd2); // Exécuter cmd2 avec les redirections gérées par cmd_simple
-            Close(fd[0]); // Fermer le côté lecture du pipe (si cmd_simple ne l'a pas déjà fait)
+    if (pid2 == 0) {
+		//we immediatly make point stdin to the pipe, child2 has to read the result from cmd1
+        Dup2(fd[0], STDIN_FILENO);
+        //treat the case of an 'output' redirection, similar than before
+        if (l->out) {
+            out_fd = Open(l->out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (out_fd == -1) {
+                perror("Open output file error");
+                exit(EXIT_FAILURE);
+            }
+            Dup2(out_fd, STDOUT_FILENO);
+            Close(out_fd);
         }
-        // Exécuter cmd2 après redirection
+        
+        Close(fd[0]);
+        Close(fd[1]);
         execvp(cmd2[0], cmd2);
-        perror("execvp ");
+        perror("execvp error cmd2");
         exit(EXIT_FAILURE);
     }
-	//father
-	Close(fd[0]);
-	Close(fd[1]);
-	waitpid(pid1, NULL, 0);
-	waitpid(pid2, NULL, 0);
-	return;
-}
 
+    //finish the process from the parent
+    Close(fd[0]);
+    Close(fd[1]);
+    waitpid(pid1, NULL, 0);
+    waitpid(pid2, NULL, 0);
+}
 int main()
 {
 
@@ -139,8 +165,8 @@ int main()
 			exit(0);
 		}
 		
-		if (l->in) printf("in: %s\n", l->in);
-		if (l->out) printf("out: %s\n", l->out);
+		if (l->in) DEBUG_PRINT("in: %s", l->in);
+		if (l->out) DEBUG_PRINT("out: %s", l->out);
 
 		/* Execute each command of the pipe */
 		//for (i=0; l->seq[i]!=0; i++) {
