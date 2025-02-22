@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "readcmd.h"
 #include "csapp.h"
-
+#define MAXSIZE (1000)
 /*part3 et 4, simple command and redirections*/
 void cmd_simple(struct cmdline* l,char **cmd) {
 	pid_t pid = Fork();
@@ -44,9 +44,46 @@ void cmd_simple(struct cmdline* l,char **cmd) {
 	}
 }
 
+/* part 6*/
+void pipe_cmd_simple() {
+	int fd[2]; //fd[0] = read, fd[1] = write
+	pid_t pid1, pid2;
+	if (pipe(fd) == -1) {
+		perror("Pipe error ");
+		exit(EXIT_FAILURE);
+	}
+	pid1 = Fork();
+	//first command
+	if (pid1 == 0) {
+		Close(fd[0]); //close the pipe read
+		Dup2(fd[1], 1); //make stdout points to fd
+		Close(fd[1]);
+		execlp("ls", "ls", "-l", NULL);
+		perror("execvp ls -l ");
+		exit(EXIT_FAILURE);
+
+	}
+	pid2 = Fork();
+	if (pid2 == 0) {
+		Close(fd[1]); //close the pipe write
+		Dup2(fd[0], 0); //makes stdin points to fd
+		Close(fd[0]);
+		execlp("less", "less", NULL);
+		perror("execvp less ");
+		exit(EXIT_FAILURE);
+	}
+	//father
+	Close(fd[0]);
+	Close(fd[1]);
+	waitpid(pid1, NULL, 0);
+	waitpid(pid1, NULL, 0);
+	return;
+}
 
 int main()
 {
+
+	pipe_cmd_simple();
 	while (1) {
 		struct cmdline *l;
 		int i, j;//, k;
