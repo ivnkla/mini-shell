@@ -16,7 +16,7 @@ L'idée est de réaliser un shell, qui gère :
 * commandes simples ✅
 * commandes simples avec redirections ✅
 * commandes tubulaires avec redirections ✅
-* arrière plan ✅
+* arrière plan ❌
 * zombies ✅
 
 ## L'implémentation
@@ -26,3 +26,37 @@ L'idée est de réaliser un shell, qui gère :
 Notons que cette fonction est inutilisée dès l'implémentatation de `execute_pipeline` qui traite ces cas particuliers, mais aussi les pipes. Attention, cette fonction ne gère que les cas du type : `cmd1 < in.txt | cmd2 | cmd3 | ... | cmdN > out.txt` et non les cas farfelus du genre `cmd1 > fichier1.txt | cmd2 | cmd3 | ... | cmdN < fichier2.txt`.
 
 Dans le détail,`execute_pipeline()` utilise une fonction auxiliaire nommée `pip_cmd_simple()` qui prend en argument deux descripteurs de fichiers, un pour lire et l'autre pour écrire. Elle se charge de faire pointer le premier descripteur vers l'entrée standard `stdin` et s'occupe de faire pointer le second descripteur sur la sortie standard `stdout` de façon à créer un pont entre `fildes1` la commande courante `cmd`et `fildes2`. C'est `execute_pipeline()` qui s'occupe d'exécuter toutes les commandes du pipe en prenant en compte les redirections qui peuvent arriver au début et à la fin de la pipeline.
+
+## Comment utiliser le shell ?
+### Compiler 
+Compiler simplement :
+```c
+make
+```
+Pour compiler avec des options de debug :
+```c
+make debug
+```
+
+### Utiliser le shell
+Après avoir compiler, lancer :
+```c
+./shell
+```
+
+### Tests 
+Pour effectuer une batterie de tests :
+```c
+./all.sh
+```
+
+Notez que tous les tests effectués se trouvent dans le répertoire `tests` et vous pouvez ajoutez vos propres tests moyennant le format suivant :
+```bash
+# commentaire 1
+# commentaire 2
+# ...
+
+ici la commande que vous souhaitez tester
+la seconde commande que vous souhaitez tester 
+etc...
+```
