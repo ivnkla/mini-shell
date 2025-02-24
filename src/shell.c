@@ -130,6 +130,15 @@ void execute_pipeline(struct cmdline* l) {
     //while (wait(NULL) > 0);
 }
 
+/*fonction visant à gérer les zombis*/
+void handlerZ(){
+	pid_t pid;
+	int status;
+	while((pid = Waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0){
+		printf("on attend ici la fin des fils\n");
+	}
+	return;
+}
 
 int main()
 {
