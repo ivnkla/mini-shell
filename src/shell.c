@@ -62,6 +62,7 @@ void cmd_simple(struct cmdline* l,char **cmd) {
 		waitpid(pid, NULL, 0);
 	}
 }
+/*REMINDER OF USELESSNESS OF THIS FUNCTION AS HANDLED IN THE PIPELINE METHOD*/
 
 //just do a single cmd and read an input (or write an ouput) if need, we keep it simple here
 void pipe_cmd_simple(struct cmdline* l, char **cmd, int read_fd, int write_fd) {

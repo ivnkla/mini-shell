@@ -95,6 +95,12 @@ static char **split_in_words(char *line)
 			w = "|";
 			cur++;
 			break;
+		/*starting the modifs*/
+		case '&':
+			w = "&";
+			cur++;
+			break;
+		/*ending the modifs*/
 		default:
 			/* Another word */
 			start = cur;
