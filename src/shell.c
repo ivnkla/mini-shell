@@ -136,16 +136,19 @@ void execute_pipeline(struct cmdline* l) {
 void handlerZ(){
 	pid_t pid;
 	int status;
-	while((pid = Waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0){
-		printf("on attend ici la fin des fils, ");
-		printf("status : %d\n",status);
+	//printf("on est avant la boucle");
+	while((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0){
+		fprintf(stdout,"on attend ici la fin des fils, ");
+		fprintf(stdout,"status : %d\n",status);
 	}
+
+	//fprintf(stdout,"status : %d\n",status);
 	return;
 }
 
 int main()
 {
-	Signal(SIGCHLD,handlerZ);	//traitant du SIGCHLD  
+	Signal(SIGCHLD,handlerZ);	//traitant du SIGCHLD
 	while (1) {
 		struct cmdline *l;
 
