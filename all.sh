@@ -5,11 +5,7 @@
 for testX in "./tests"/*
 do
 	echo "Test avec le fichier $testX..."
-	echo
 	./sdriver.pl -t $testX -s ./shell
-	echo
-	echo "Fin du test $testX."
-	echo
 done
 
 
