@@ -138,8 +138,8 @@ void handlerZ(){
 	int status;
 	//printf("on est avant la boucle");
 	while((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0){
-		fprintf(stdout,"on attend ici la fin des fils, ");
-		fprintf(stdout,"status : %d\n",status);
+		//fprintf(stdout,"on attend ici la fin des fils, ");
+		//fprintf(stdout,"status : %d\n",status);
 	}
 
 	//fprintf(stdout,"status : %d\n",status);
