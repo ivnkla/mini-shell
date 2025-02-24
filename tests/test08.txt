@@ -1,0 +1,6 @@
+#
+# Pipe entre deux commandes 'complexes'
+#cat test.txt | wc -w
+#
+
+cat test.txt | wc -w

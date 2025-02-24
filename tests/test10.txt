@@ -1,0 +1,5 @@
+#
+# recupère la météo
+# curl -s https://wttr.in | head -n 16
+#
+curl -s https://wttr.in | head -n 20

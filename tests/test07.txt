@@ -1,0 +1,9 @@
+#
+# Test du hello world
+# echo "Hello, world!" > test.txt
+# cat test.txt
+#
+
+echo "Hello, world!" > test.txt
+cat test.txt
+

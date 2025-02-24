@@ -1,0 +1,10 @@
+#
+# Autre test avec un pipe
+# echo "Il y a" 
+# ls | wc -l 
+# echo "fichiers dans ce dossier."
+#
+
+echo "Il y a" 
+ls|wc -l 
+echo "fichiers dans ce dossier."
