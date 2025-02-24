@@ -130,19 +130,21 @@ void execute_pipeline(struct cmdline* l) {
     //while (wait(NULL) > 0);
 }
 
-/*fonction visant à gérer les zombis*/
+/*Traitement des zombis*/
+
 void handlerZ(){
 	pid_t pid;
 	int status;
 	while((pid = Waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0){
-		printf("on attend ici la fin des fils\n");
+		printf("on attend ici la fin des fils, ");
+		printf("status : %d\n",status);
 	}
 	return;
 }
 
 int main()
 {
-
+	Signal(SIGCHLD,handlerZ);	//traitant du SIGCHLD  
 	while (1) {
 		struct cmdline *l;
 
