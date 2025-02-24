@@ -1,0 +1,8 @@
+#
+# Test d'une commande avec redirection entrée et sortie
+# wc -w < lorem.txt > lorem.output 
+# cat lorem.output
+# expected output : 457 
+#
+wc -w < lorem.txt > lorem.output 
+cat lorem.output
