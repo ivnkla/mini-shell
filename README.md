@@ -60,3 +60,30 @@ ici la commande que vous souhaitez tester
 la seconde commande que vous souhaitez tester 
 etc...
 ```
+### Structure
+```sh
+.
+├── Makefile
+├── README.md
+├── all.sh
+├── lorem.txt
+├── notes.txt
+├── sdriver.pl
+├── src
+│   ├── csapp.c
+│   ├── csapp.h
+│   ├── readcmd.c
+│   ├── readcmd.h
+│   └── shell.c
+└── tests
+    ├── test01.txt
+    ├── test02.txt
+    ├── test03.txt
+    ├── test04.txt
+    ├── test05.txt
+    ├── test06.txt
+    ├── test07.txt
+    ├── test08.txt
+    ├── test09.txt
+    └── test10.txt
+```
